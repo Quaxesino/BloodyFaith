@@ -33,8 +33,10 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float dashingCooldown = 1f; // Dash sonrasý bekleme süresi
     [SerializeField] private TrailRenderer trail; // Dash efekti için (opsiyonel)
 
-    private bool isDashing = false;
     private bool canDash = true;
+
+    private float moveAmount;
+    private Vector3 moveInput;
 
     private void Awake()
     {
@@ -66,9 +68,9 @@ public class PlayerController : MonoBehaviour
         float h = Input.GetAxis("Horizontal");
         float v = Input.GetAxis("Vertical");
 
-        float moveAmount = Mathf.Clamp01(Mathf.Abs(h) + Mathf.Abs(v));
+        moveAmount = Mathf.Clamp01(Mathf.Abs(h) + Mathf.Abs(v));
 
-        var moveInput = (new Vector3 (h, 0, v)).normalized;
+        moveInput = (new Vector3 (h, 0, v)).normalized;
 
         var moveDir = cameraController.PlanarRotation * moveInput;
         InputDir = moveDir;
@@ -147,8 +149,8 @@ public class PlayerController : MonoBehaviour
 
     private IEnumerator Dash()
     {
+
         // Dash iþlemi baþlýyor
-        isDashing = true;
         canDash = false;
 
         // Trail efekti etkinleþtirilir
@@ -159,7 +161,16 @@ public class PlayerController : MonoBehaviour
 
         // Dash sýrasýnda hareket
         float timer = 0f;
-        Vector3 dashDirection = transform.forward; // Oyuncunun baktýðý yön
+        Vector3 dashDirection; // Oyuncunun baktýðý yön
+        if (moveAmount > 0)
+        {
+            dashDirection = moveInput;
+           
+        }
+        else
+        {
+            dashDirection = transform.forward;
+        }
         while (timer < dashingTime)
         {
             characterController.Move(dashDirection * dashingPower * Time.deltaTime);
@@ -172,7 +183,6 @@ public class PlayerController : MonoBehaviour
         {
             trail.emitting = false;
         }
-        isDashing = false;
 
         // Dash sonrasý cooldown
         yield return new WaitForSeconds(dashingCooldown);
