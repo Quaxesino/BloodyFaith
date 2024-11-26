@@ -1,9 +1,11 @@
+using System.Collections;
 using UnityEngine;
+using UnityEngine.UIElements.Experimental;
 
 public class PlayerController : MonoBehaviour
 {
 
-    [SerializeField] float moveSpeed = 5f;
+    public float moveSpeed = 5f;
     [SerializeField] float rotationSpeed = 500f;
 
     [SerializeField] float groundCheckRadius = 0.2f;
@@ -25,6 +27,15 @@ public class PlayerController : MonoBehaviour
     CombatController combatController;
     public static PlayerController i { get; private set; }
 
+    [Header("Dash Info")]
+    public float dashingPower = 12f; // Dash sýrasýnda hýz
+    [SerializeField] private float dashingTime = 0.12f; // Dash süresi
+    [SerializeField] private float dashingCooldown = 1f; // Dash sonrasý bekleme süresi
+    [SerializeField] private TrailRenderer trail; // Dash efekti için (opsiyonel)
+
+    private bool isDashing = false;
+    private bool canDash = true;
+
     private void Awake()
     {
         cameraController = Camera.main.GetComponent<CameraController>();
@@ -33,10 +44,19 @@ public class PlayerController : MonoBehaviour
         meleeFighter = GetComponent<MeleeFighter>();
         combatController = GetComponent<CombatController>();
         i = this;
+        trail.emitting = false;
     }
 
     private void Update()
     {
+        Debug.Log("Speed:" + moveSpeed);
+        Debug.Log("Dash Power:" + dashingPower);
+
+        if (Input.GetKeyDown(KeyCode.Space) && canDash && meleeFighter.Health > 0) // Space tuþuna basýldýðýnda dash yap
+        {
+            StartCoroutine(Dash());
+        }
+
         if (meleeFighter.InAction || meleeFighter.Health <= 0)
         {
             targetRotation = transform.rotation;
@@ -123,6 +143,40 @@ public class PlayerController : MonoBehaviour
     {
         Gizmos.color = new Color(0, 1, 0, 0.5f);
         Gizmos.DrawSphere(transform.TransformPoint(groundCheckOffset), groundCheckRadius);
+    }
+
+    private IEnumerator Dash()
+    {
+        // Dash iþlemi baþlýyor
+        isDashing = true;
+        canDash = false;
+
+        // Trail efekti etkinleþtirilir
+        if (trail != null)
+        {
+            trail.emitting = true;
+        }
+
+        // Dash sýrasýnda hareket
+        float timer = 0f;
+        Vector3 dashDirection = transform.forward; // Oyuncunun baktýðý yön
+        while (timer < dashingTime)
+        {
+            characterController.Move(dashDirection * dashingPower * Time.deltaTime);
+            timer += Time.deltaTime;
+            yield return null; // Her çerçevede devam et
+        }
+
+        // Dash iþlemi bitti
+        if (trail != null)
+        {
+            trail.emitting = false;
+        }
+        isDashing = false;
+
+        // Dash sonrasý cooldown
+        yield return new WaitForSeconds(dashingCooldown);
+        canDash = true; // Dash tekrar kullanýlabilir
     }
 
 
