@@ -7,7 +7,8 @@ public enum AttackStates { Idle, Windup, Impact, Cooldown }
 
 public class MeleeFighter : MonoBehaviour
 {
-    [field: SerializeField] public float Health { get; private set; } = 25f;
+    public float DamageVal = 5f;
+    [field: SerializeField] public float Health { get; set; } = 25f;
     [SerializeField] List<AttackData> attacks;
     [SerializeField] List<AttackData> longRangeAttacks;
     [SerializeField] float longRangeAttackThreshold = 1.5f;
@@ -28,6 +29,11 @@ public class MeleeFighter : MonoBehaviour
     private void Awake()
     {
         animator = GetComponent<Animator>();
+    }
+    private void Update()
+    {
+        Debug.Log("Health:" + Health);
+        Debug.Log("Damage:" + DamageVal);
     }
 
     private void Start()
@@ -158,14 +164,14 @@ public class MeleeFighter : MonoBehaviour
         InAction = false;
         currTarget = null;
     }
-    private void OnTriggerEnter(Collider other)
+    private void OnTriggerEnter(UnityEngine.Collider other)
     {
         if (other.tag == "Hitbox" && !IsTakingHit && !InCounter)
         {
             var attacker = other.GetComponentInParent<MeleeFighter>();
             if (attacker.currTarget != this)
                 return;
-            TakeDamage(5f);
+            TakeDamage(DamageVal);
             OnGotHit.Invoke(attacker);
 
             if (Health >  0)

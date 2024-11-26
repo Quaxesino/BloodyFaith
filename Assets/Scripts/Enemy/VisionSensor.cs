@@ -1,5 +1,5 @@
-using System.Collections;
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 
 public class VisionSensor : MonoBehaviour
@@ -8,9 +8,15 @@ public class VisionSensor : MonoBehaviour
 
     private void Awake()
     {
+        if (enemy == null)
+        {
+            Debug.LogError("Enemy reference is not assigned in VisionSensor.");
+            return;
+        }
+
         enemy.VisionSensor = this;
     }
-    private void OnTriggerEnter(Collider other)
+    private void OnTriggerEnter(UnityEngine.Collider other)
     {
         var fighter = other.GetComponent<MeleeFighter>();
         if (fighter != null)
@@ -22,7 +28,7 @@ public class VisionSensor : MonoBehaviour
          
     }
 
-    private void OnTriggerExit(Collider other)
+    private void OnTriggerExit(UnityEngine.Collider other)
     {
         var fighter = other.GetComponent<MeleeFighter>();
 

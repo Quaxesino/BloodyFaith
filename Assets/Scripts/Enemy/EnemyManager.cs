@@ -37,7 +37,7 @@ public class EnemyManager : MonoBehaviour
         {
             enemy.MeshHighlighter?.HighlightMesh(false); 
             player.TargetEnemy = GetClosestEnemyToDirection(player.GetTargetDir());
-            player.TargetEnemy?.MeshHighlighter?.HighlightMesh(true);
+            player.TargetEnemy?.MeshHighlighter?.HighlightMesh(false);
         }
     }
 
@@ -74,7 +74,7 @@ public class EnemyManager : MonoBehaviour
                 var prevEnemy = player.TargetEnemy;
                 player.TargetEnemy = closestEnemy;
 
-                player?.TargetEnemy?.MeshHighlighter.HighlightMesh(true);
+                player?.TargetEnemy?.MeshHighlighter.HighlightMesh(false);
                 prevEnemy?.MeshHighlighter?.HighlightMesh(false);
             }
 

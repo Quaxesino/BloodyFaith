@@ -1,9 +1,11 @@
+using System.Collections;
 using UnityEngine;
+using UnityEngine.UIElements.Experimental;
 
 public class PlayerController : MonoBehaviour
 {
 
-    [SerializeField] float moveSpeed = 5f;
+    public float moveSpeed = 5f;
     [SerializeField] float rotationSpeed = 500f;
 
     [SerializeField] float groundCheckRadius = 0.2f;
@@ -25,6 +27,17 @@ public class PlayerController : MonoBehaviour
     CombatController combatController;
     public static PlayerController i { get; private set; }
 
+    [Header("Dash Info")]
+    public float dashingPower = 12f; // Dash sýrasýnda hýz
+    [SerializeField] private float dashingTime = 0.12f; // Dash süresi
+    [SerializeField] private float dashingCooldown = 1f; // Dash sonrasý bekleme süresi
+    [SerializeField] private TrailRenderer trail; // Dash efekti için (opsiyonel)
+
+    private bool canDash = true;
+
+    private float moveAmount;
+    private Vector3 moveInput;
+
     private void Awake()
     {
         cameraController = Camera.main.GetComponent<CameraController>();
@@ -33,10 +46,19 @@ public class PlayerController : MonoBehaviour
         meleeFighter = GetComponent<MeleeFighter>();
         combatController = GetComponent<CombatController>();
         i = this;
+        trail.emitting = false;
     }
 
     private void Update()
     {
+        Debug.Log("Speed:" + moveSpeed);
+        Debug.Log("Dash Power:" + dashingPower);
+
+        if (Input.GetKeyDown(KeyCode.Space) && canDash && meleeFighter.Health > 0) // Space tuþuna basýldýðýnda dash yap
+        {
+            StartCoroutine(Dash());
+        }
+
         if (meleeFighter.InAction || meleeFighter.Health <= 0)
         {
             targetRotation = transform.rotation;
@@ -46,9 +68,9 @@ public class PlayerController : MonoBehaviour
         float h = Input.GetAxis("Horizontal");
         float v = Input.GetAxis("Vertical");
 
-        float moveAmount = Mathf.Clamp01(Mathf.Abs(h) + Mathf.Abs(v));
+        moveAmount = Mathf.Clamp01(Mathf.Abs(h) + Mathf.Abs(v));
 
-        var moveInput = (new Vector3 (h, 0, v)).normalized;
+        moveInput = (new Vector3 (h, 0, v)).normalized;
 
         var moveDir = cameraController.PlanarRotation * moveInput;
         InputDir = moveDir;
@@ -123,6 +145,48 @@ public class PlayerController : MonoBehaviour
     {
         Gizmos.color = new Color(0, 1, 0, 0.5f);
         Gizmos.DrawSphere(transform.TransformPoint(groundCheckOffset), groundCheckRadius);
+    }
+
+    private IEnumerator Dash()
+    {
+
+        // Dash iþlemi baþlýyor
+        canDash = false;
+
+        // Trail efekti etkinleþtirilir
+        if (trail != null)
+        {
+            trail.emitting = true;
+        }
+
+        // Dash sýrasýnda hareket
+        float timer = 0f;
+        Vector3 dashDirection; // Oyuncunun baktýðý yön
+        if (moveAmount > 0)
+        {
+            dashDirection = moveInput;
+           
+        }
+        else
+        {
+            dashDirection = transform.forward;
+        }
+        while (timer < dashingTime)
+        {
+            characterController.Move(dashDirection * dashingPower * Time.deltaTime);
+            timer += Time.deltaTime;
+            yield return null; // Her çerçevede devam et
+        }
+
+        // Dash iþlemi bitti
+        if (trail != null)
+        {
+            trail.emitting = false;
+        }
+
+        // Dash sonrasý cooldown
+        yield return new WaitForSeconds(dashingCooldown);
+        canDash = true; // Dash tekrar kullanýlabilir
     }
 
 

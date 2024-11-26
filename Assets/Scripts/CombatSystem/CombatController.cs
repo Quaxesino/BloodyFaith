@@ -2,6 +2,7 @@ using UnityEngine;
 
 public class CombatController : MonoBehaviour
 {
+    public float AttackRange = 11f;
     public Camera cam1;
     [SerializeField] LayerMask enemyslayer;
     EnemyController targetEnemy;
@@ -69,7 +70,7 @@ public class CombatController : MonoBehaviour
             else
             {
                 Ray ray = cam1.ScreenPointToRay(Input.mousePosition);
-                RaycastHit[] hits = Physics.RaycastAll(ray, Mathf.Infinity, enemyslayer);
+                RaycastHit[] hits = Physics.RaycastAll(ray, AttackRange, enemyslayer);
 
                 hitObject = null;
 
